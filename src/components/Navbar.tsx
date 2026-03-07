@@ -25,7 +25,7 @@ const Navbar = () => {
   const links = isAuth ? authLinks : publicLinks;
 
   return (
-    <nav className="liquid-card fixed top-4 left-1/2 -translate-x-1/2 z-50 px-6 py-3 flex items-center justify-between gap-6 max-w-4xl w-[calc(100%-2rem)]">
+    <nav className="fixed top-4 left-1/2 -translate-x-1/2 z-50 px-6 py-3 flex items-center justify-between gap-6 max-w-4xl w-[calc(100%-2rem)] bg-card/80 backdrop-blur-xl border border-border rounded-2xl shadow-lg" style={{ position: 'fixed' }}>
       <Link to="/" className="flex items-center gap-2 font-body font-bold text-primary text-lg shrink-0">
         <BookOpen className="w-6 h-6" />
         <span>Note Explainer</span>
