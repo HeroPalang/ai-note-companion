@@ -22,6 +22,7 @@ const Navbar = () => {
     { to: "/notes", label: "My Notes", icon: BookOpen },
     { to: "/add-note", label: "Add Note", icon: BookOpen },
     { to: "/ai-helper", label: "AI Helper", icon: BookOpen },
+    { to: "/profile", label: "Profile", icon: User },
   ];
 
   const links = isAuth ? authLinks : publicLinks;
