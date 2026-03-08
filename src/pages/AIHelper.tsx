@@ -115,6 +115,7 @@ const AIHelper = () => {
           title,
           subject,
           content: noteContent,
+          fileUrl: selectedNote?.file_url || null,
           questionCount,
           difficulty,
           generateType,

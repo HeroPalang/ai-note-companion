@@ -141,16 +141,50 @@ Deno.serve(async (req) => {
     const title = String(body?.title || "").trim();
     const subject = String(body?.subject || "").trim();
     const content = String(body?.content || "").trim();
+    const fileUrl = String(body?.fileUrl || "").trim();
     const difficulty = String(body?.difficulty || "medium").toLowerCase();
     const questionCount = Math.max(3, Math.min(Number(body?.questionCount || 5), 10));
     const generateType = String(body?.generateType || "explanation").toLowerCase();
 
-    if (!content) {
+    // Extract text from attached file if present
+    let fileContent = "";
+    if (fileUrl) {
+      try {
+        const fileResp = await fetch(fileUrl);
+        if (fileResp.ok) {
+          const ct = (fileResp.headers.get("content-type") || "").toLowerCase();
+          if (ct.startsWith("text/") || ct.includes("json") || ct.includes("csv") || ct.includes("xml")) {
+            fileContent = await fileResp.text();
+          } else if (ct.includes("image/")) {
+            // For images, tell the AI about the attachment
+            fileContent = "[An image file is attached but cannot be read as text. Focus on the written notes content.]";
+          } else {
+            // Try reading as text for common document types
+            const text = await fileResp.text();
+            if (text && text.length > 0 && text.length < 100000) {
+              fileContent = text;
+            }
+          }
+          // Limit file content to avoid token explosion
+          if (fileContent.length > 30000) {
+            fileContent = fileContent.slice(0, 30000) + "\n\n[File content truncated due to length]";
+          }
+        }
+      } catch (e) {
+        console.error("Failed to fetch file content:", e);
+      }
+    }
+
+    if (!content && !fileContent) {
       return new Response(
         JSON.stringify({ error: "Content is required." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
+
+    const fileSection = fileContent
+      ? `\n\nAttached File Content:\n${fileContent}`
+      : "";
 
     const targetLabel = generateType === "questions" ? "a quiz" : "a concise student-friendly explanation";
     const prompt = `
@@ -163,7 +197,7 @@ Questions: ${questionCount}
 Output Type: ${generateType}
 
 Notes:
-${content}
+${content}${fileSection}
 `.trim();
 
     const instructionText = generateType === "questions"
