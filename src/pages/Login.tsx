@@ -1,19 +1,55 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Mail, Lock, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import LiquidBackground from "@/components/LiquidBackground";
+import { toast } from "sonner";
+import { cacheAuthUser, KEEP_SIGNED_IN_KEY, supabase, warmOfflineReadiness } from "@/lib/supabase";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [keepSignedIn, setKeepSignedIn] = useState(() => localStorage.getItem(KEEP_SIGNED_IN_KEY) !== "false");
   const navigate = useNavigate();
+  const location = useLocation();
+  const redirectTo = (location.state as { from?: string } | null)?.from || "/dashboard";
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate("/dashboard");
+    setLoading(true);
+    setMessage("");
+
+    try {
+      localStorage.setItem(KEEP_SIGNED_IN_KEY, keepSignedIn ? "true" : "false");
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+
+      if (error) {
+        const raw = String(error.message || "Unable to sign in.");
+        const normalized = raw.toLowerCase().includes("failed to fetch") ? "No connection. Try again online." : raw;
+        setMessage(normalized);
+        return;
+      }
+
+      const { data } = await supabase.auth.getSession();
+      cacheAuthUser(data?.session?.user);
+      toast.success("Login successful.");
+      warmOfflineReadiness().catch(() => {
+        // best-effort background warmup
+      });
+      navigate(redirectTo);
+    } catch (error) {
+      console.error("Login failed:", error);
+      setMessage("Unexpected error while signing in.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -53,8 +89,22 @@ const Login = () => {
               required
             />
           </div>
-          <Button type="submit" className="w-full h-12 rounded-xl font-body font-semibold text-base liquid-hero-gradient border-0 text-primary-foreground hover:opacity-90 transition-opacity">
-            Sign In
+          <label className="flex items-center gap-2 text-sm text-muted-foreground font-body">
+            <input
+              type="checkbox"
+              checked={keepSignedIn}
+              onChange={(e) => setKeepSignedIn(e.target.checked)}
+              className="rounded border-border accent-primary"
+            />
+            Keep me signed in
+          </label>
+          {message ? <p className="text-sm text-destructive font-body">{message}</p> : null}
+          <Button
+            type="submit"
+            disabled={loading}
+            className="w-full h-12 rounded-xl font-body font-semibold text-base liquid-hero-gradient border-0 text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-60"
+          >
+            {loading ? "Signing In..." : "Sign In"}
             <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </form>

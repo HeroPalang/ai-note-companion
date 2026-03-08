@@ -1,73 +1,59 @@
-# Welcome to your Lovable project
+# AI Note Companion (Merged with AI-Note-Explainer Backend)
 
-## Project info
+This project keeps the current React UI and now uses backend/features merged from `AI-Note-Explainer`:
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+- Supabase auth (register/login/logout)
+- Student profile metadata on signup
+- Notes CRUD with offline cache + sync queue
+- AI generation via Supabase Edge Function (`generate-explanation`)
+- AI token usage tracking
+- Protected routes for dashboard/notes/add-note/ai-helper
 
-## How can I edit this code?
+## Local Setup
 
-There are several ways of editing your application.
+1. Install dependencies:
 
-**Use Lovable**
+```bash
+npm install
+```
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+2. Create `.env` from `.env.example` and set values:
 
-Changes made via Lovable will be committed automatically to this repo.
+```bash
+cp .env.example .env
+```
 
-**Use your preferred IDE**
+3. Run the app:
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## Supabase Setup
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Run SQL in this order:
 
-**Use GitHub Codespaces**
+1. [database/schema.sql](/C:/Users/Angel/Desktop/12/ai-note-companion/database/schema.sql)
+2. [database/admin_rules.sql](/C:/Users/Angel/Desktop/12/ai-note-companion/database/admin_rules.sql) (optional but needed for admin rules)
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Deploy edge function:
 
-## What technologies are used for this project?
+```bash
+npx supabase functions deploy generate-explanation --project-ref <your-project-ref>
+```
 
-This project is built with:
+Set function secret:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+```bash
+npx supabase secrets set GEMINI_API_KEY=<your_gemini_api_key> --project-ref <your-project-ref>
+```
 
-## How can I deploy this project?
+Edge function source:
+- [supabase/functions/generate-explanation/index.ts](/C:/Users/Angel/Desktop/12/ai-note-companion/supabase/functions/generate-explanation/index.ts)
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+## Verification
 
-## Can I connect a custom domain to my Lovable project?
+- `npm run build` passes
+- `npm run test` passes
 
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+`npm run lint` currently has existing pre-existing errors in UI scaffold files unrelated to this merge.

@@ -7,17 +7,48 @@ import { Textarea } from "@/components/ui/textarea";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import LiquidBackground from "@/components/LiquidBackground";
+import { createNote, getNotesSyncStatus, warmOfflineReadiness } from "@/lib/supabase";
 
 const AddNote = () => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [subject, setSubject] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const messageFromError = (error: unknown) =>
+    error instanceof Error ? error.message : "Unknown error";
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("Note saved successfully!");
-    navigate("/notes");
+    setLoading(true);
+    try {
+      await createNote({
+        title: title.trim() || "Untitled Note",
+        content: content.trim(),
+        subject: subject.trim() || null,
+      });
+
+      const { online, pending } = await getNotesSyncStatus();
+      if (online && pending === 0) {
+        toast.success("Note saved successfully.");
+      } else {
+        toast.success(`Note saved locally. Pending sync: ${pending}.`);
+      }
+      warmOfflineReadiness().catch(() => {
+        // best-effort background warmup
+      });
+      navigate("/notes");
+    } catch (error: unknown) {
+      const rawMessage = messageFromError(error);
+      if (String(rawMessage).toLowerCase().includes("not authenticated")) {
+        toast.error("Session not available. Go online and log in again.");
+      } else {
+        toast.error(`Failed to save note: ${rawMessage}`);
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -65,9 +96,13 @@ const AddNote = () => {
               required
             />
           </div>
-          <Button type="submit" className="w-full h-12 rounded-xl font-body font-semibold text-base liquid-hero-gradient border-0 text-primary-foreground hover:opacity-90 transition-opacity">
+          <Button
+            type="submit"
+            disabled={loading}
+            className="w-full h-12 rounded-xl font-body font-semibold text-base liquid-hero-gradient border-0 text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-60"
+          >
             <Save className="w-4 h-4 mr-2" />
-            Save Note
+            {loading ? "Saving..." : "Save Note"}
           </Button>
         </motion.form>
       </div>

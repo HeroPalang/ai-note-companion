@@ -4,6 +4,7 @@ import { ArrowRight, BookOpen, Brain, Smartphone, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import LiquidBackground from "@/components/LiquidBackground";
 import heroImage from "@/assets/hero-liquid.png";
+import PwaInstallButton from "@/components/PwaInstallButton";
 
 const metrics = [
   { value: "Fast", label: "Create and save notes instantly", icon: Zap },
@@ -70,6 +71,7 @@ const Index = () => {
                       Log In
                     </Button>
                   </Link>
+                  <PwaInstallButton />
                 </div>
               </div>
               <div className="relative">

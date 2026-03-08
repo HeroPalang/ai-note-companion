@@ -2,6 +2,9 @@ import { motion } from "framer-motion";
 import { BookOpen, Brain, Plus, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 import LiquidBackground from "@/components/LiquidBackground";
+import { useEffect, useState } from "react";
+import { getAiTokenUsageStatus, getNotesSyncStatus } from "@/lib/supabase";
+import { useAuth } from "@/context/AuthContext";
 
 const cards = [
   {
@@ -35,6 +38,34 @@ const features = [
 ];
 
 const Dashboard = () => {
+  const { user } = useAuth();
+  const [syncLabel, setSyncLabel] = useState("Checking...");
+  const [usageLabel, setUsageLabel] = useState("Checking...");
+
+  useEffect(() => {
+    const refresh = async () => {
+      const sync = await getNotesSyncStatus().catch(() => ({ pending: 0 }));
+      if ((sync?.pending || 0) > 0) {
+        setSyncLabel(`Pending sync: ${sync.pending}`);
+      } else {
+        setSyncLabel("All notes synced");
+      }
+
+      const usage = await getAiTokenUsageStatus(24, 50_000).catch(() => null);
+      if (!usage || !usage.limit) {
+        setUsageLabel("Usage unavailable");
+      } else {
+        setUsageLabel(`${Number(usage.used || 0).toLocaleString()} / ${Number(usage.limit || 0).toLocaleString()} tokens`);
+      }
+    };
+
+    void refresh();
+    const id = window.setInterval(() => {
+      void refresh();
+    }, 15000);
+    return () => window.clearInterval(id);
+  }, []);
+
   return (
     <div className="liquid-bg min-h-screen pt-24 pb-12 px-4">
       <LiquidBackground />
@@ -50,6 +81,9 @@ const Dashboard = () => {
           </h1>
           <p className="text-lg text-muted-foreground font-body">
             Your learning hub for notes and study materials
+          </p>
+          <p className="text-sm text-muted-foreground font-body mt-2">
+            Signed in as {user?.email || "student"} | {syncLabel} | {usageLabel}
           </p>
         </motion.div>
 
