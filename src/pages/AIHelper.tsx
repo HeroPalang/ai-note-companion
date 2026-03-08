@@ -243,12 +243,17 @@ const AIHelper = () => {
                 </option>
               ))}
             </select>
-            {selectedNote?.file_url && (
-              <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground font-body">
-                <Paperclip className="w-3.5 h-3.5 text-primary" />
-                <span>This note has a file attachment — the AI will read its content.</span>
+            {selectedNote?.file_url ? (
+              <div className="flex items-center gap-2 mt-2 text-xs font-body rounded-lg bg-primary/10 text-primary px-3 py-2">
+                <Paperclip className="w-3.5 h-3.5 shrink-0" />
+                <span>📄 File detected — AI will <strong>read the file content</strong> to generate the explanation.</span>
               </div>
-            )}
+            ) : selectedNote ? (
+              <div className="flex items-center gap-2 mt-2 text-xs font-body text-muted-foreground">
+                <BookCheck className="w-3.5 h-3.5 shrink-0" />
+                <span>No file attached — AI will read your <strong>written note content</strong>.</span>
+              </div>
+            ) : null}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
