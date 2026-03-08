@@ -667,18 +667,36 @@ export async function getNotes(all = false) {
  * Upload a file to Supabase storage (note-attachments bucket)
  */
 export async function uploadNoteFile(file) {
-    const user = await getCurrentUser();
-    if (!user) throw new Error('Not authenticated');
+    const { data: sessionData } = await supabase.auth.getSession();
+    const sessionUser = sessionData?.session?.user;
+    if (!sessionUser?.id) {
+        throw new Error('Session expired. Please log in again before uploading files.');
+    }
+    cacheAuthUser(sessionUser);
     if (!isOnline()) throw new Error('File upload requires an internet connection');
 
-    const ext = file.name.split('.').pop();
-    const filePath = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const rawName = String(file?.name || 'attachment');
+    const parts = rawName.split('.');
+    const ext = (parts.length > 1 ? parts.pop() : 'bin') || 'bin';
+    const safeExt = String(ext).toLowerCase().replace(/[^a-z0-9]/g, '') || 'bin';
+    const baseName = parts.join('.') || 'attachment';
+    const safeBase = baseName.toLowerCase().replace(/[^a-z0-9._-]/g, '-').slice(0, 50) || 'attachment';
+    const filePath = `${sessionUser.id}/${Date.now()}-${safeBase}-${Math.random().toString(36).slice(2, 8)}.${safeExt}`;
 
     const { data, error } = await supabase.storage
         .from('note-attachments')
         .upload(filePath, file, { upsert: false });
 
-    if (error) throw error;
+    if (error) {
+        const message = String(error?.message || '');
+        if (message.toLowerCase().includes('bucket not found')) {
+            throw new Error("Storage bucket 'note-attachments' not found. Create it in Supabase Storage first.");
+        }
+        if (message.toLowerCase().includes('row-level security')) {
+            throw new Error("Storage policy rejected upload. Make sure database/storage_policies.sql is applied to this same Supabase project.");
+        }
+        throw error;
+    }
 
     const { data: urlData } = supabase.storage
         .from('note-attachments')

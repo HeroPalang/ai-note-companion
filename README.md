@@ -51,6 +51,15 @@ npx supabase secrets set GEMINI_API_KEY=<your_gemini_api_key> --project-ref <you
 Edge function source:
 - [supabase/functions/generate-explanation/index.ts](/C:/Users/Angel/Desktop/12/ai-note-companion/supabase/functions/generate-explanation/index.ts)
 
+## File Upload Setup
+
+To enable note attachment upload:
+
+1. In Supabase Storage, create bucket: `note-attachments`
+2. Set bucket to public if you want direct `file_url` links to open without signed URLs.
+3. Keep `file_url` column in `public.notes` (already in [schema.sql](/C:/Users/Angel/Desktop/12/ai-note-companion/database/schema.sql)).
+4. Run [storage_policies.sql](/C:/Users/Angel/Desktop/12/ai-note-companion/database/storage_policies.sql) in Supabase SQL Editor to allow authenticated uploads to each user's own folder.
+
 ## Verification
 
 - `npm run build` passes

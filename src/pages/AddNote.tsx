@@ -56,6 +56,17 @@ const AddNote = () => {
           fileUrl = await uploadNoteFile(file);
         } catch (uploadErr: unknown) {
           const msg = messageFromError(uploadErr);
+          const normalized = msg.toLowerCase();
+          if (normalized.includes("session expired")) {
+            toast.error("Your login session expired. Please log out and log in again, then retry upload.");
+            setLoading(false);
+            return;
+          }
+          if (normalized.includes("row-level security policy")) {
+            toast.error("File upload blocked by Storage RLS. Run database/storage_policies.sql in Supabase SQL Editor.");
+            setLoading(false);
+            return;
+          }
           if (msg.toLowerCase().includes("internet") || msg.toLowerCase().includes("online")) {
             toast.error("File upload requires an internet connection. Note saved without attachment.");
           } else {

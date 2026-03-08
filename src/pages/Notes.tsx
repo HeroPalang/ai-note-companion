@@ -20,6 +20,7 @@ interface Note {
   content: string;
   subject: string | null;
   explanation?: string | null;
+  file_url?: string | null;
   created_at: string;
   _local?: boolean;
 }
@@ -171,6 +172,17 @@ const Notes = () => {
                   </Button>
                 </div>
                 <p className="text-sm text-muted-foreground font-body line-clamp-3 flex-1">{note.content}</p>
+                {note.file_url ? (
+                  <a
+                    href={note.file_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={(event) => event.stopPropagation()}
+                    className="text-xs font-body text-primary hover:underline mt-2 inline-block"
+                  >
+                    Open attachment
+                  </a>
+                ) : null}
                 {note.explanation ? (
                   <p className="text-xs text-muted-foreground/80 font-body mt-2 line-clamp-2">AI: {note.explanation}</p>
                 ) : null}
@@ -208,6 +220,20 @@ const Notes = () => {
                     <p className="text-sm leading-relaxed whitespace-pre-wrap break-words text-foreground">
                       {activeNote.explanation}
                     </p>
+                  </div>
+                ) : null}
+
+                {activeNote.file_url ? (
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Attachment</p>
+                    <a
+                      href={activeNote.file_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-sm font-body text-primary hover:underline break-all"
+                    >
+                      Open attached file
+                    </a>
                   </div>
                 ) : null}
               </div>
