@@ -13,6 +13,7 @@ import {
 import LiquidBackground from "@/components/LiquidBackground";
 import { toast } from "sonner";
 import { deleteNote, getNotes, supabase } from "@/lib/supabase";
+import FileViewer from "@/components/FileViewer";
 
 interface Note {
   id: string;
