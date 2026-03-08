@@ -7,7 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 const Navbar = () => {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isAdmin } = useAuth();
   const isAuth = isAuthenticated;
 
   const publicLinks = [
