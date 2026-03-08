@@ -2,7 +2,6 @@ import { Link, useLocation } from "react-router-dom";
 import { BookOpen, LogIn, UserPlus, LayoutDashboard, Info, Menu, X, User } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 
 const Navbar = () => {
