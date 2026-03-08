@@ -182,13 +182,14 @@ Deno.serve(async (req) => {
       );
     }
 
-    const fileSection = fileContent
-      ? `\n\nAttached File Content:\n${fileContent}`
-      : "";
+    // Dual approach: if file attached & readable → use file as primary source; otherwise use note content
+    const hasReadableFile = Boolean(fileContent) && !fileContent.startsWith("[An image");
+    const primaryContent = hasReadableFile ? fileContent : content;
+    const sourceLabel = hasReadableFile ? "the attached file" : "the written notes";
 
     const targetLabel = generateType === "questions" ? "a quiz" : "a concise student-friendly explanation";
     const prompt = `
-Generate ${targetLabel} from these notes.
+Generate ${targetLabel} based on ${sourceLabel}.
 
 Title: ${title || "Untitled"}
 Subject: ${subject || "General"}
@@ -196,8 +197,8 @@ Difficulty: ${difficulty}
 Questions: ${questionCount}
 Output Type: ${generateType}
 
-Notes:
-${content}${fileSection}
+${hasReadableFile ? "File Content" : "Notes"}:
+${primaryContent}
 `.trim();
 
     const instructionText = generateType === "questions"
