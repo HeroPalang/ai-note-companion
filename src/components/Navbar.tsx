@@ -50,18 +50,6 @@ const Navbar = () => {
             {link.label}
           </Link>
         ))}
-        {isAuth && (
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="px-4 py-2 rounded-lg text-sm font-medium font-body text-destructive hover:bg-destructive/10 transition-colors"
-          >
-            <span className="inline-flex items-center gap-2">
-              <LogOut className="w-4 h-4" />
-              Log Out
-            </span>
-          </button>
-        )}
       </div>
 
       {/* Mobile toggle */}
