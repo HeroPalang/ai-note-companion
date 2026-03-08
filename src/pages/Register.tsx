@@ -19,6 +19,13 @@ const Register = () => {
     setLoading(true);
     setMessage("");
 
+    const studentId = form.studentId.trim();
+    if (!studentId) {
+      setMessage("Student ID is required.");
+      setLoading(false);
+      return;
+    }
+
     if (form.password.length < 6) {
       setMessage("Password must be at least 6 characters.");
       setLoading(false);
@@ -34,7 +41,7 @@ const Register = () => {
             first_name: form.firstName.trim(),
             last_name: form.lastName.trim(),
             full_name: `${form.firstName.trim()} ${form.lastName.trim()}`.trim(),
-            student_id: form.studentId.trim() || null,
+            student_id: studentId,
             grade_level: form.gradeLevel.trim(),
           },
         },
@@ -105,10 +112,11 @@ const Register = () => {
             <Input placeholder="Grade level (e.g. Grade 10)" value={form.gradeLevel} onChange={(e) => update("gradeLevel", e.target.value)} className="pl-10 h-11 rounded-xl font-body bg-accent/50" />
           </div>
           <Input
-            placeholder="Student ID (optional)"
+            placeholder="Student ID"
             value={form.studentId}
             onChange={(e) => update("studentId", e.target.value)}
             className="h-11 rounded-xl font-body bg-accent/50"
+            required
           />
           {message ? <p className="text-sm text-destructive font-body">{message}</p> : null}
           <Button

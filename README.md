@@ -4,6 +4,7 @@ This project keeps the current React UI and now uses backend/features merged fro
 
 - Supabase auth (register/login/logout)
 - Student profile metadata on signup
+- Student ID is required at registration
 - Notes CRUD with offline cache + sync queue
 - AI generation via Supabase Edge Function (`generate-explanation`)
 - AI token usage tracking

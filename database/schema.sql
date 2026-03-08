@@ -16,12 +16,21 @@ CREATE TABLE IF NOT EXISTS public.student_profiles (
     first_name TEXT NOT NULL,
     last_name TEXT NOT NULL,
     full_name TEXT GENERATED ALWAYS AS (first_name || ' ' || last_name) STORED,
-    student_id TEXT,
+    student_id TEXT NOT NULL CHECK (char_length(btrim(student_id)) > 0),
     grade_level TEXT NOT NULL,
     avatar_url TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Enforce student_id for existing deployments as well.
+-- NOT VALID keeps existing invalid rows until manually corrected,
+-- while still enforcing the rule for new inserts/updates.
+ALTER TABLE public.student_profiles
+    DROP CONSTRAINT IF EXISTS student_profiles_student_id_required;
+ALTER TABLE public.student_profiles
+    ADD CONSTRAINT student_profiles_student_id_required
+    CHECK (student_id IS NOT NULL AND char_length(btrim(student_id)) > 0) NOT VALID;
 
 -- Create index for faster lookups
 CREATE INDEX IF NOT EXISTS idx_student_profiles_email ON public.student_profiles(email);
@@ -63,7 +72,7 @@ BEGIN
         NEW.email,
         COALESCE(NEW.raw_user_meta_data->>'first_name', ''),
         COALESCE(NEW.raw_user_meta_data->>'last_name', ''),
-        NEW.raw_user_meta_data->>'student_id',
+        NULLIF(btrim(NEW.raw_user_meta_data->>'student_id'), ''),
         COALESCE(NEW.raw_user_meta_data->>'grade_level', '')
     );
     RETURN NEW;
