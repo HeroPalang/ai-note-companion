@@ -1,5 +1,6 @@
 import { corsHeaders } from "../_shared/cors.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import JSZip from "https://esm.sh/jszip@3.10.1";
 
 type QuizItem = {
   question: string;
@@ -58,6 +59,63 @@ function toNumber(value: unknown): number {
 function estimateTokens(text: string): number {
   // Coarse fallback when provider usage metadata is missing.
   return Math.max(1, Math.ceil(text.length / 4));
+}
+
+function decodeXmlEntities(text: string): string {
+  return text
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, "\"")
+    .replace(/&#39;/g, "'")
+    .replace(/&#xA;/gi, "\n")
+    .replace(/&#x9;/gi, "\t");
+}
+
+function getFileExtension(fileUrl: string): string {
+  try {
+    const pathname = new URL(fileUrl).pathname;
+    const filename = pathname.split("/").pop() || "";
+    const parts = filename.split(".");
+    return (parts.length > 1 ? parts.pop() : "")?.toLowerCase() || "";
+  } catch {
+    return "";
+  }
+}
+
+function extractDocxXmlText(xml: string): string {
+  const paragraphMatches = [...xml.matchAll(/<w:p\b[\s\S]*?<\/w:p>/g)];
+  const chunks = paragraphMatches.length ? paragraphMatches.map((m) => m[0]) : [xml];
+  const lines: string[] = [];
+
+  for (const chunk of chunks) {
+    const normalized = chunk
+      .replace(/<w:tab\/>/g, "\t")
+      .replace(/<w:br[^>]*\/>/g, "\n")
+      .replace(/<w:cr[^>]*\/>/g, "\n");
+
+    const textParts = [...normalized.matchAll(/<w:t\b[^>]*>([\s\S]*?)<\/w:t>/g)]
+      .map((m) => decodeXmlEntities(m[1]))
+      .filter(Boolean);
+
+    const line = textParts.join("").replace(/\u00a0/g, " ").trimEnd();
+    if (line) lines.push(line);
+  }
+
+  return lines.join("\n").trim();
+}
+
+async function extractDocxText(buffer: ArrayBuffer): Promise<string> {
+  try {
+    const zip = await JSZip.loadAsync(buffer);
+    const documentXmlFile = zip.file("word/document.xml");
+    if (!documentXmlFile) return "";
+    const documentXml = await documentXmlFile.async("string");
+    return extractDocxXmlText(documentXml);
+  } catch (error) {
+    console.error("DOCX extraction failed:", error);
+    return "";
+  }
 }
 
 Deno.serve(async (req) => {
@@ -146,26 +204,38 @@ Deno.serve(async (req) => {
     const questionCount = Math.max(3, Math.min(Number(body?.questionCount || 5), 10));
     const generateType = String(body?.generateType || "explanation").toLowerCase();
 
-    // Extract text from attached file if present
+    // Extract text from attached file if present.
     let fileContent = "";
     if (fileUrl) {
       try {
         const fileResp = await fetch(fileUrl);
         if (fileResp.ok) {
           const ct = (fileResp.headers.get("content-type") || "").toLowerCase();
-          if (ct.startsWith("text/") || ct.includes("json") || ct.includes("csv") || ct.includes("xml")) {
+          const ext = getFileExtension(fileUrl);
+          const docxLike = ct.includes("application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+            || ext === "docx";
+          const textLike = ct.startsWith("text/")
+            || ct.includes("json")
+            || ct.includes("csv")
+            || ct.includes("xml")
+            || ["txt", "md", "markdown", "js", "ts", "tsx", "jsx", "py", "java", "c", "cpp", "cs", "go", "rs", "php", "rb", "sh"].includes(ext);
+
+          if (docxLike) {
+            const bytes = await fileResp.arrayBuffer();
+            fileContent = await extractDocxText(bytes);
+          } else if (textLike) {
             fileContent = await fileResp.text();
           } else if (ct.includes("image/")) {
-            // For images, tell the AI about the attachment
+            // For images, tell the AI about the attachment.
             fileContent = "[An image file is attached but cannot be read as text. Focus on the written notes content.]";
           } else {
-            // Try reading as text for common document types
+            // Final fallback: try reading as text for unknown content types.
             const text = await fileResp.text();
             if (text && text.length > 0 && text.length < 100000) {
               fileContent = text;
             }
           }
-          // Limit file content to avoid token explosion
+          // Limit file content to avoid token explosion.
           if (fileContent.length > 30000) {
             fileContent = fileContent.slice(0, 30000) + "\n\n[File content truncated due to length]";
           }
@@ -182,7 +252,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Dual approach: if file attached & readable → use file as primary source; otherwise use note content
+    // Dual approach: if file attached and readable, use file as primary source; otherwise use note content.
     const hasReadableFile = Boolean(fileContent) && !fileContent.startsWith("[An image");
     const primaryContent = hasReadableFile ? fileContent : content;
     const sourceLabel = hasReadableFile ? "the attached file" : "the written notes";

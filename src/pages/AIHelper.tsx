@@ -47,6 +47,41 @@ type AiResponse = {
 const messageFromError = (error: unknown) =>
   error instanceof Error ? error.message : "Unknown error";
 
+const normalizeText = (value: string) =>
+  String(value || "").toLowerCase().replace(/\s+/g, " ").trim();
+
+function getCorrectChoiceIndex(answer: string, choices: string[]): number {
+  const normalizedAnswer = normalizeText(answer);
+  const directMatch = choices.findIndex((choice) => normalizeText(choice) === normalizedAnswer);
+  if (directMatch >= 0) return directMatch;
+
+  const letterMatch = normalizedAnswer.match(/^([a-z])(?:[\s).:-]|$)/i);
+  if (letterMatch) {
+    const index = letterMatch[1].toLowerCase().charCodeAt(0) - 97;
+    if (index >= 0 && index < choices.length) return index;
+  }
+
+  const numberMatch = normalizedAnswer.match(/^([1-9][0-9]*)(?:[\s).:-]|$)/);
+  if (numberMatch) {
+    const index = Number(numberMatch[1]) - 1;
+    if (index >= 0 && index < choices.length) return index;
+  }
+
+  return -1;
+}
+
+function extractNoteAttachmentPath(fileUrl: string): string | null {
+  try {
+    const url = new URL(fileUrl);
+    const marker = "/storage/v1/object/public/note-attachments/";
+    const idx = url.pathname.indexOf(marker);
+    if (idx < 0) return null;
+    return decodeURIComponent(url.pathname.slice(idx + marker.length));
+  } catch (_error) {
+    return null;
+  }
+}
+
 const AIHelper = () => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [selectedNoteId, setSelectedNoteId] = useState("");
@@ -61,6 +96,7 @@ const AIHelper = () => {
   const [message, setMessage] = useState("");
   const [explanation, setExplanation] = useState("");
   const [quiz, setQuiz] = useState<QuizItem[]>([]);
+  const [quizSelections, setQuizSelections] = useState<Record<number, number>>({});
   const [usage, setUsage] = useState<{ usedInWindow?: number; remainingInWindow?: number; limit?: number } | null>(null);
 
   const selectedNote = useMemo(
@@ -89,11 +125,14 @@ const AIHelper = () => {
   }, [selectedNote]);
 
   const generate = async () => {
-    if (!noteContent.trim()) return;
+    const hasFileSource = Boolean(selectedNote?.file_url);
+    const hasTextSource = Boolean(noteContent.trim());
+    if (!hasFileSource && !hasTextSource) return;
     setLoading(true);
     setMessage("");
     setExplanation("");
     setQuiz([]);
+    setQuizSelections({});
 
     try {
       const { data: sessionData } = await supabase.auth.getSession();
@@ -103,6 +142,20 @@ const AIHelper = () => {
       if (!userId) throw new Error("Not authenticated. Please log in again.");
 
       const authToken = sessionData?.session?.access_token || SUPABASE_ANON_KEY;
+      let fileUrlForAI = selectedNote?.file_url || null;
+      if (fileUrlForAI) {
+        const attachmentPath = extractNoteAttachmentPath(fileUrlForAI);
+        if (attachmentPath) {
+          const { data: signedData, error: signedError } = await supabase.storage
+            .from("note-attachments")
+            .createSignedUrl(attachmentPath, 300);
+
+          if (!signedError && signedData?.signedUrl) {
+            fileUrlForAI = signedData.signedUrl;
+          }
+        }
+      }
+
       const response = await fetch(`${SUPABASE_URL}/functions/v1/generate-explanation`, {
         method: "POST",
         headers: {
@@ -115,7 +168,7 @@ const AIHelper = () => {
           title,
           subject,
           content: noteContent,
-          fileUrl: selectedNote?.file_url || null,
+          fileUrl: fileUrlForAI,
           questionCount,
           difficulty,
           generateType,
@@ -207,6 +260,13 @@ const AIHelper = () => {
     }
   };
 
+  const selectQuizChoice = (questionIndex: number, choiceIndex: number) => {
+    setQuizSelections((prev) => {
+      if (typeof prev[questionIndex] === "number") return prev;
+      return { ...prev, [questionIndex]: choiceIndex };
+    });
+  };
+
   return (
     <div className="liquid-bg min-h-screen pt-24 pb-12 px-4">
       <LiquidBackground />
@@ -246,12 +306,12 @@ const AIHelper = () => {
             {selectedNote?.file_url ? (
               <div className="flex items-center gap-2 mt-2 text-xs font-body rounded-lg bg-primary/10 text-primary px-3 py-2">
                 <Paperclip className="w-3.5 h-3.5 shrink-0" />
-                <span>📄 File detected — AI will <strong>read the file content</strong> to generate the explanation.</span>
+                <span>File detected - AI will <strong>read the file content</strong> as the primary source.</span>
               </div>
             ) : selectedNote ? (
               <div className="flex items-center gap-2 mt-2 text-xs font-body text-muted-foreground">
                 <BookCheck className="w-3.5 h-3.5 shrink-0" />
-                <span>No file attached — AI will read your <strong>written note content</strong>.</span>
+                <span>No file attached - AI will read your <strong>written note content</strong>.</span>
               </div>
             ) : null}
           </div>
@@ -268,7 +328,9 @@ const AIHelper = () => {
           </div>
 
           <div>
-            <label className="text-sm font-body font-semibold text-foreground mb-2 block">Your Note Content</label>
+            <label className="text-sm font-body font-semibold text-foreground mb-2 block">
+              {selectedNote?.file_url ? "Your Note Content (optional when file is attached)" : "Your Note Content"}
+            </label>
             <Textarea
               placeholder="Paste or type your note content here..."
               value={noteContent}
@@ -320,7 +382,7 @@ const AIHelper = () => {
 
           <Button
             onClick={generate}
-            disabled={loading || !noteContent.trim()}
+            disabled={loading || (!selectedNote?.file_url && !noteContent.trim())}
             className="w-full h-12 rounded-xl font-body font-semibold text-base liquid-hero-gradient border-0 text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
           >
             {loading ? (
@@ -365,24 +427,61 @@ const AIHelper = () => {
                     Quiz Questions
                   </h2>
                   <ol className="space-y-4">
-                    {quiz.map((item, i) => (
-                      <li key={`${item.question}-${i}`} className="space-y-2 text-muted-foreground font-body">
-                        <div className="flex gap-3">
-                          <span className="w-7 h-7 rounded-full bg-primary/10 text-primary font-semibold flex items-center justify-center shrink-0 text-sm">
-                            {i + 1}
-                          </span>
-                          <p>{item.question}</p>
-                        </div>
-                        {item.choices?.length ? (
-                          <ul className="ml-10 list-disc space-y-1">
-                            {item.choices.map((choice, idx) => (
-                              <li key={`${choice}-${idx}`} className="text-sm">{choice}</li>
-                            ))}
-                          </ul>
-                        ) : null}
-                        {item.answer ? <p className="ml-10 text-xs text-muted-foreground/80">Answer: {item.answer}</p> : null}
-                      </li>
-                    ))}
+                    {quiz.map((item, i) => {
+                      const correctIndex = getCorrectChoiceIndex(item.answer, item.choices);
+                      const selectedIndex = quizSelections[i];
+                      const hasSelection = typeof selectedIndex === "number";
+                      const selectedWrong = hasSelection && correctIndex >= 0 && selectedIndex !== correctIndex;
+
+                      return (
+                        <li key={`${item.question}-${i}`} className="space-y-2 text-muted-foreground font-body">
+                          <div className="flex gap-3">
+                            <span className="w-7 h-7 rounded-full bg-primary/10 text-primary font-semibold flex items-center justify-center shrink-0 text-sm">
+                              {i + 1}
+                            </span>
+                            <p>{item.question}</p>
+                          </div>
+                          {item.choices?.length ? (
+                            <div className="ml-10 grid gap-2">
+                              {item.choices.map((choice, idx) => {
+                                const isSelected = selectedIndex === idx;
+                                const isCorrect = correctIndex === idx;
+
+                                let choiceClass = "border-border bg-background/60 hover:bg-accent/60";
+                                if (hasSelection) {
+                                  if (isSelected && isCorrect) {
+                                    choiceClass = "border-green-600 bg-green-100 text-green-800";
+                                  } else if (isSelected && !isCorrect) {
+                                    choiceClass = "border-red-600 bg-red-100 text-red-800";
+                                  } else if (selectedWrong && isCorrect) {
+                                    choiceClass = "border-green-500 bg-green-50 text-green-700";
+                                  } else {
+                                    choiceClass = "border-border bg-muted/40 text-muted-foreground";
+                                  }
+                                }
+
+                                return (
+                                  <button
+                                    key={`${choice}-${idx}`}
+                                    type="button"
+                                    onClick={() => selectQuizChoice(i, idx)}
+                                    disabled={hasSelection}
+                                    className={`w-full text-left rounded-lg border px-3 py-2 text-sm transition-colors ${choiceClass} ${hasSelection ? "cursor-default" : "cursor-pointer"}`}
+                                  >
+                                    {choice}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          ) : null}
+                          {selectedWrong && correctIndex >= 0 ? (
+                            <p className="ml-10 text-xs text-green-700 font-medium">
+                              Correct answer: {item.choices[correctIndex]}
+                            </p>
+                          ) : null}
+                        </li>
+                      );
+                    })}
                   </ol>
                 </div>
               ) : null}
