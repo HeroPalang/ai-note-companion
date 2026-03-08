@@ -13,6 +13,7 @@ import {
 import LiquidBackground from "@/components/LiquidBackground";
 import { toast } from "sonner";
 import { deleteNote, getNotes, supabase } from "@/lib/supabase";
+import FileViewer from "@/components/FileViewer";
 
 interface Note {
   id: string;
@@ -226,14 +227,7 @@ const Notes = () => {
                 {activeNote.file_url ? (
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">Attachment</p>
-                    <a
-                      href={activeNote.file_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-sm font-body text-primary hover:underline break-all"
-                    >
-                      Open attached file
-                    </a>
+                    <FileViewer url={activeNote.file_url} />
                   </div>
                 ) : null}
               </div>
