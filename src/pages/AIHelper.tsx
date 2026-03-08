@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Brain, Sparkles, BookCheck, Loader2, Save } from "lucide-react";
+import { Brain, Sparkles, BookCheck, Loader2, Save, Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,7 @@ type Note = {
   title?: string;
   subject?: string | null;
   content?: string | null;
+  file_url?: string | null;
 };
 
 type QuizItem = {
@@ -114,6 +115,7 @@ const AIHelper = () => {
           title,
           subject,
           content: noteContent,
+          fileUrl: selectedNote?.file_url || null,
           questionCount,
           difficulty,
           generateType,
@@ -241,6 +243,12 @@ const AIHelper = () => {
                 </option>
               ))}
             </select>
+            {selectedNote?.file_url && (
+              <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground font-body">
+                <Paperclip className="w-3.5 h-3.5 text-primary" />
+                <span>This note has a file attachment — the AI will read its content.</span>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
