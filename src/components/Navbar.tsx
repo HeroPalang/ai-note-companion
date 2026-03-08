@@ -81,16 +81,6 @@ const Navbar = () => {
                 {link.label}
               </Link>
             ))}
-            {isAuth && (
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="px-4 py-3 rounded-lg text-sm font-medium font-body flex items-center gap-2 text-destructive hover:bg-destructive/10 transition-colors"
-              >
-                <LogOut className="w-4 h-4" />
-                Log Out
-              </button>
-            )}
           </motion.div>
         )}
       </AnimatePresence>
