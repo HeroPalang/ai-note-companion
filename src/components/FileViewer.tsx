@@ -1,24 +1,48 @@
-import { useState } from "react";
-import { FileText, Download, ZoomIn, ZoomOut } from "lucide-react";
+import { useState, useEffect } from "react";
+import { FileText, ZoomIn, ZoomOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface FileViewerProps {
   url: string;
 }
 
-const getFileType = (url: string): "image" | "pdf" | "video" | "audio" | "other" => {
+type FileType = "image" | "pdf" | "video" | "audio" | "document" | "other";
+
+const EXT_MAP: Record<string, FileType> = {
+  jpg: "image", jpeg: "image", png: "image", gif: "image", webp: "image", svg: "image", bmp: "image",
+  pdf: "pdf",
+  mp4: "video", webm: "video", ogg: "video", mov: "video",
+  mp3: "audio", wav: "audio", m4a: "audio", flac: "audio",
+  doc: "document", docx: "document", pptx: "document", ppt: "document",
+  xlsx: "document", xls: "document", csv: "document", txt: "document",
+};
+
+const getFileType = (url: string): FileType => {
   const clean = url.split("?")[0].toLowerCase();
-  if (/\.(jpg|jpeg|png|gif|webp|svg|bmp)$/.test(clean)) return "image";
-  if (/\.pdf$/.test(clean)) return "pdf";
-  if (/\.(mp4|webm|ogg)$/.test(clean)) return "video";
-  if (/\.(mp3|wav|m4a|ogg|flac)$/.test(clean)) return "audio";
-  return "other";
+  const ext = clean.split(".").pop() || "";
+  return EXT_MAP[ext] || "other";
 };
 
 const FileViewer = ({ url }: FileViewerProps) => {
-  const type = getFileType(url);
+  const [type, setType] = useState<FileType>(() => getFileType(url));
   const [imgError, setImgError] = useState(false);
   const [zoom, setZoom] = useState(1);
+
+  // Fallback: if extension detection returned "other", probe content-type
+  useEffect(() => {
+    if (type !== "other") return;
+    fetch(url, { method: "HEAD" })
+      .then((res) => {
+        const ct = res.headers.get("content-type")?.toLowerCase() || "";
+        if (ct.startsWith("image/")) setType("image");
+        else if (ct === "application/pdf") setType("pdf");
+        else if (ct.startsWith("video/")) setType("video");
+        else if (ct.startsWith("audio/")) setType("audio");
+        else if (ct.includes("document") || ct.includes("sheet") || ct.includes("presentation") || ct === "text/plain" || ct === "text/csv")
+          setType("document");
+      })
+      .catch(() => {});
+  }, [url, type]);
 
   if (type === "image" && !imgError) {
     return (
@@ -71,18 +95,30 @@ const FileViewer = ({ url }: FileViewerProps) => {
     );
   }
 
+  // For docs (docx, pptx, xlsx, txt, csv) and unknown — use Google Docs Viewer
+  if (type === "document") {
+    const viewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`;
+    return (
+      <iframe
+        src={viewerUrl}
+        title="Document viewer"
+        className="w-full h-[50vh] rounded-lg border border-border bg-muted/30"
+      />
+    );
+  }
+
+  // Truly unknown — try Google Docs Viewer as last resort
   return (
-    <div className="flex items-center gap-3 rounded-xl bg-muted/30 border border-border p-4">
-      <FileText className="w-8 h-8 text-primary shrink-0" />
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-body text-foreground truncate">Attached file</p>
-        <p className="text-xs text-muted-foreground">Preview not available for this file type</p>
+    <div className="space-y-3">
+      <iframe
+        src={`https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`}
+        title="File viewer"
+        className="w-full h-[50vh] rounded-lg border border-border bg-muted/30"
+      />
+      <div className="flex items-center gap-2 text-xs text-muted-foreground font-body">
+        <FileText className="w-4 h-4 text-primary" />
+        If the preview doesn't load, the file type may not be supported for inline viewing.
       </div>
-      <Button variant="outline" size="sm" asChild>
-        <a href={url} download className="no-underline">
-          <Download className="w-4 h-4 mr-1" /> Download
-        </a>
-      </Button>
     </div>
   );
 };
