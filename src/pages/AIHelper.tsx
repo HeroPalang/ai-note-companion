@@ -243,6 +243,12 @@ const AIHelper = () => {
                 </option>
               ))}
             </select>
+            {selectedNote?.file_url && (
+              <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground font-body">
+                <Paperclip className="w-3.5 h-3.5 text-primary" />
+                <span>This note has a file attachment — the AI will read its content.</span>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
