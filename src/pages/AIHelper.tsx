@@ -23,6 +23,7 @@ type Note = {
   title?: string;
   subject?: string | null;
   content?: string | null;
+  file_url?: string | null;
 };
 
 type QuizItem = {
