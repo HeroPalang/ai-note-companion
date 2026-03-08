@@ -1,14 +1,13 @@
 import { Link, useLocation } from "react-router-dom";
-import { BookOpen, LogIn, UserPlus, LayoutDashboard, Info, Menu, X, LogOut } from "lucide-react";
+import { BookOpen, LogIn, UserPlus, LayoutDashboard, Info, Menu, X, User } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 
 const Navbar = () => {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated } = useAuth();
   const isAuth = isAuthenticated;
 
   const publicLinks = [
@@ -22,20 +21,11 @@ const Navbar = () => {
     { to: "/notes", label: "My Notes", icon: BookOpen },
     { to: "/add-note", label: "Add Note", icon: BookOpen },
     { to: "/ai-helper", label: "AI Helper", icon: BookOpen },
+    { to: "/profile", label: "Profile", icon: User },
   ];
 
   const links = isAuth ? authLinks : publicLinks;
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-      toast.success("Signed out successfully.");
-      setMobileOpen(false);
-    } catch (error) {
-      console.error("Logout failed:", error);
-      toast.error("Could not sign out. Please try again.");
-    }
-  };
 
   return (
     <nav className="fixed top-4 left-1/2 -translate-x-1/2 z-50 px-6 py-3 flex items-center justify-between gap-6 max-w-4xl w-[calc(100%-2rem)] bg-card/80 backdrop-blur-xl border border-border rounded-2xl shadow-lg" style={{ position: 'fixed' }}>
@@ -59,18 +49,6 @@ const Navbar = () => {
             {link.label}
           </Link>
         ))}
-        {isAuth && (
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="px-4 py-2 rounded-lg text-sm font-medium font-body text-destructive hover:bg-destructive/10 transition-colors"
-          >
-            <span className="inline-flex items-center gap-2">
-              <LogOut className="w-4 h-4" />
-              Log Out
-            </span>
-          </button>
-        )}
       </div>
 
       {/* Mobile toggle */}
@@ -102,16 +80,6 @@ const Navbar = () => {
                 {link.label}
               </Link>
             ))}
-            {isAuth && (
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="px-4 py-3 rounded-lg text-sm font-medium font-body flex items-center gap-2 text-destructive hover:bg-destructive/10 transition-colors"
-              >
-                <LogOut className="w-4 h-4" />
-                Log Out
-              </button>
-            )}
           </motion.div>
         )}
       </AnimatePresence>
