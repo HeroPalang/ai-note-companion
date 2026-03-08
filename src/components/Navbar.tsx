@@ -22,6 +22,7 @@ const Navbar = () => {
     { to: "/add-note", label: "Add Note", icon: BookOpen },
     { to: "/ai-helper", label: "AI Helper", icon: BookOpen },
     { to: "/profile", label: "Profile", icon: User },
+    ...(isAdmin ? [{ to: "/admin", label: "Admin", icon: Shield }] : []),
   ];
 
   const links = isAuth ? authLinks : publicLinks;
