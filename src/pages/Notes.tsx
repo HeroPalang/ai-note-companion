@@ -174,15 +174,7 @@ const Notes = () => {
                 </div>
                 <p className="text-sm text-muted-foreground font-body line-clamp-3 flex-1">{note.content}</p>
                 {note.file_url ? (
-                  <a
-                    href={note.file_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    onClick={(event) => event.stopPropagation()}
-                    className="text-xs font-body text-primary hover:underline mt-2 inline-block"
-                  >
-                    Open attachment
-                  </a>
+                  <span className="text-xs font-body text-primary mt-2 inline-block">📎 Has attachment</span>
                 ) : null}
                 {note.explanation ? (
                   <p className="text-xs text-muted-foreground/80 font-body mt-2 line-clamp-2">AI: {note.explanation}</p>
