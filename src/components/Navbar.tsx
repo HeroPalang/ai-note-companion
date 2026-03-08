@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { BookOpen, LogIn, UserPlus, LayoutDashboard, Info, Menu, X, User } from "lucide-react";
+import { BookOpen, LogIn, UserPlus, LayoutDashboard, Info, Menu, X, User, Shield } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
@@ -7,7 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 const Navbar = () => {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isAdmin } = useAuth();
   const isAuth = isAuthenticated;
 
   const publicLinks = [
@@ -22,6 +22,7 @@ const Navbar = () => {
     { to: "/add-note", label: "Add Note", icon: BookOpen },
     { to: "/ai-helper", label: "AI Helper", icon: BookOpen },
     { to: "/profile", label: "Profile", icon: User },
+    ...(isAdmin ? [{ to: "/admin", label: "Admin", icon: Shield }] : []),
   ];
 
   const links = isAuth ? authLinks : publicLinks;
