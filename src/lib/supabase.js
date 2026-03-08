@@ -664,6 +664,30 @@ export async function getNotes(all = false) {
 }
 
 /**
+ * Upload a file to Supabase storage (note-attachments bucket)
+ */
+export async function uploadNoteFile(file) {
+    const user = await getCurrentUser();
+    if (!user) throw new Error('Not authenticated');
+    if (!isOnline()) throw new Error('File upload requires an internet connection');
+
+    const ext = file.name.split('.').pop();
+    const filePath = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+    const { data, error } = await supabase.storage
+        .from('note-attachments')
+        .upload(filePath, file, { upsert: false });
+
+    if (error) throw error;
+
+    const { data: urlData } = supabase.storage
+        .from('note-attachments')
+        .getPublicUrl(data.path);
+
+    return urlData.publicUrl;
+}
+
+/**
  * Create a new note
  */
 export async function createNote(note) {

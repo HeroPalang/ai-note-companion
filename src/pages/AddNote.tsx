@@ -1,13 +1,13 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { Save, BookOpen } from "lucide-react";
+import { Save, BookOpen, Upload, X, FileText, Image, File } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import LiquidBackground from "@/components/LiquidBackground";
-import { createNote, getNotesSyncStatus, warmOfflineReadiness } from "@/lib/supabase";
+import { createNote, getNotesSyncStatus, warmOfflineReadiness, uploadNoteFile } from "@/lib/supabase";
 
 const AddNote = () => {
   const [title, setTitle] = useState("");
