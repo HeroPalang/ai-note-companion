@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ExternalLink, FileText, Download } from "lucide-react";
+import { FileText, Download, ZoomIn, ZoomOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface FileViewerProps {
@@ -18,53 +18,56 @@ const getFileType = (url: string): "image" | "pdf" | "video" | "audio" | "other"
 const FileViewer = ({ url }: FileViewerProps) => {
   const type = getFileType(url);
   const [imgError, setImgError] = useState(false);
+  const [zoom, setZoom] = useState(1);
 
   if (type === "image" && !imgError) {
     return (
       <div className="space-y-2">
-        <img
-          src={url}
-          alt="Attachment"
-          className="w-full max-h-80 object-contain rounded-lg border border-border bg-muted/30"
-          onError={() => setImgError(true)}
-        />
-        <OpenLink url={url} />
+        <div className="relative overflow-auto rounded-lg border border-border bg-muted/30 max-h-[50vh]">
+          <img
+            src={url}
+            alt="Attachment"
+            className="w-full object-contain transition-transform duration-200"
+            style={{ transform: `scale(${zoom})`, transformOrigin: "top left" }}
+            onError={() => setImgError(true)}
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => setZoom((z) => Math.max(0.5, z - 0.25))}>
+            <ZoomOut className="w-3.5 h-3.5" />
+          </Button>
+          <span className="text-xs text-muted-foreground font-body">{Math.round(zoom * 100)}%</span>
+          <Button variant="outline" size="icon" className="h-7 w-7" onClick={() => setZoom((z) => Math.min(3, z + 0.25))}>
+            <ZoomIn className="w-3.5 h-3.5" />
+          </Button>
+        </div>
       </div>
     );
   }
 
   if (type === "pdf") {
     return (
-      <div className="space-y-2">
-        <iframe
-          src={url}
-          title="PDF viewer"
-          className="w-full h-[400px] rounded-lg border border-border bg-muted/30"
-        />
-        <OpenLink url={url} />
-      </div>
+      <iframe
+        src={url}
+        title="PDF viewer"
+        className="w-full h-[50vh] rounded-lg border border-border bg-muted/30"
+      />
     );
   }
 
   if (type === "video") {
     return (
-      <div className="space-y-2">
-        <video controls className="w-full max-h-80 rounded-lg border border-border bg-muted/30">
-          <source src={url} />
-        </video>
-        <OpenLink url={url} />
-      </div>
+      <video controls className="w-full max-h-[50vh] rounded-lg border border-border bg-muted/30">
+        <source src={url} />
+      </video>
     );
   }
 
   if (type === "audio") {
     return (
-      <div className="space-y-2">
-        <audio controls className="w-full">
-          <source src={url} />
-        </audio>
-        <OpenLink url={url} />
-      </div>
+      <audio controls className="w-full">
+        <source src={url} />
+      </audio>
     );
   }
 
@@ -76,23 +79,12 @@ const FileViewer = ({ url }: FileViewerProps) => {
         <p className="text-xs text-muted-foreground">Preview not available for this file type</p>
       </div>
       <Button variant="outline" size="sm" asChild>
-        <a href={url} target="_blank" rel="noreferrer">
+        <a href={url} download className="no-underline">
           <Download className="w-4 h-4 mr-1" /> Download
         </a>
       </Button>
     </div>
   );
 };
-
-const OpenLink = ({ url }: { url: string }) => (
-  <a
-    href={url}
-    target="_blank"
-    rel="noreferrer"
-    className="inline-flex items-center gap-1 text-xs font-body text-primary hover:underline"
-  >
-    <ExternalLink className="w-3 h-3" /> Open in new tab
-  </a>
-);
 
 export default FileViewer;
