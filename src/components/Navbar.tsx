@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { BookOpen, LogIn, UserPlus, LayoutDashboard, Info, Menu, X, LogOut } from "lucide-react";
+import { BookOpen, LogIn, UserPlus, LayoutDashboard, Info, Menu, X, User } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
