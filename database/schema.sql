@@ -179,3 +179,34 @@ CREATE POLICY "Users can insert own AI usage"
     ON public.ai_token_usage
     FOR INSERT
     WITH CHECK (auth.uid() = user_id);
+
+-- =============================================
+-- 7. Storage: Note Attachments Bucket
+-- =============================================
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('note-attachments', 'note-attachments', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Users can upload to their own folder
+CREATE POLICY "Users can upload own attachments"
+    ON storage.objects
+    FOR INSERT
+    WITH CHECK (
+        bucket_id = 'note-attachments'
+        AND (storage.foldername(name))[1] = auth.uid()::text
+    );
+
+-- Anyone can read (public bucket)
+CREATE POLICY "Public read access for note attachments"
+    ON storage.objects
+    FOR SELECT
+    USING (bucket_id = 'note-attachments');
+
+-- Users can delete their own files
+CREATE POLICY "Users can delete own attachments"
+    ON storage.objects
+    FOR DELETE
+    USING (
+        bucket_id = 'note-attachments'
+        AND (storage.foldername(name))[1] = auth.uid()::text
+    );
