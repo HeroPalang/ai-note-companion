@@ -17,6 +17,7 @@ import AddNote from "./pages/AddNote";
 import AIHelper from "./pages/AIHelper";
 import About from "./pages/About";
 import Profile from "./pages/Profile";
+import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
