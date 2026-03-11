@@ -276,7 +276,7 @@ const AIHelper = () => {
             <div className="w-10 h-10 rounded-2xl liquid-hero-gradient flex items-center justify-center">
               <Brain className="w-5 h-5 text-primary-foreground" />
             </div>
-            <h1 className="text-4xl font-display font-bold text-foreground">AI Study Helper</h1>
+            <h1 className="text-2xl sm:text-4xl font-display font-bold text-foreground">AI Study Helper</h1>
           </div>
           <p className="text-muted-foreground font-body mb-8">
             Generate explanations and quizzes using the merged backend from AI-Note-Explainer

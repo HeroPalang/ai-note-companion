@@ -270,19 +270,19 @@ const Profile = () => {
                 <p className="text-muted-foreground">No AI usage yet. Try the AI Study Helper!</p>
               ) : (
                 <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-                  {aiHistory.map((row) => (
+                   {aiHistory.map((row) => (
                     <div
                       key={row.id}
-                      className="flex items-center justify-between py-2 border-b border-border last:border-0"
+                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4 py-2 border-b border-border last:border-0"
                     >
-                      <div>
-                        <span className="font-medium text-foreground capitalize">
+                      <div className="min-w-0">
+                        <span className="font-medium text-foreground capitalize text-sm">
                           {row.generate_type?.replace(/_/g, " ") || "Generation"}
                         </span>
                         <span className="text-muted-foreground ml-2 text-xs">{row.model}</span>
                       </div>
-                      <div className="text-right">
-                        <span className="text-foreground font-medium">
+                      <div className="sm:text-right flex sm:flex-col items-center sm:items-end gap-2 sm:gap-0">
+                        <span className="text-foreground font-medium text-sm">
                           {Number(row.total_tokens).toLocaleString()} tokens
                         </span>
                         <p className="text-xs text-muted-foreground">

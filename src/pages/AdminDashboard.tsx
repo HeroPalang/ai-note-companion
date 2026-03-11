@@ -154,7 +154,7 @@ const AdminDashboard = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 }}
-              className="grid grid-cols-2 md:grid-cols-5 gap-4"
+              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4"
             >
               {statCards(data.metrics).map((s) => (
                 <Card key={s.label} className="bg-card/80 backdrop-blur-sm border-border">
@@ -176,10 +176,10 @@ const AdminDashboard = () => {
               transition={{ delay: 0.1 }}
             >
               <Tabs defaultValue="users">
-                <TabsList className="w-full md:w-auto">
-                  <TabsTrigger value="users">Users ({data.profiles.length})</TabsTrigger>
-                  <TabsTrigger value="notes">Notes ({data.notes.length})</TabsTrigger>
-                  <TabsTrigger value="ai">AI Usage ({data.aiUsage.length})</TabsTrigger>
+                <TabsList className="w-full md:w-auto flex overflow-x-auto">
+                  <TabsTrigger value="users" className="flex-1 md:flex-none text-xs sm:text-sm">Users ({data.profiles.length})</TabsTrigger>
+                  <TabsTrigger value="notes" className="flex-1 md:flex-none text-xs sm:text-sm">Notes ({data.notes.length})</TabsTrigger>
+                  <TabsTrigger value="ai" className="flex-1 md:flex-none text-xs sm:text-sm">AI ({data.aiUsage.length})</TabsTrigger>
                 </TabsList>
 
                 {/* Users Tab */}

@@ -82,9 +82,13 @@ const Dashboard = () => {
           <p className="text-lg text-muted-foreground font-body">
             Your learning hub for notes and study materials
           </p>
-          <p className="text-sm text-muted-foreground font-body mt-2">
-            Signed in as {user?.email || "student"} | {syncLabel} | {usageLabel}
-          </p>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground font-body mt-2">
+            <span className="truncate max-w-[200px] sm:max-w-none">{user?.email || "student"}</span>
+            <span className="hidden sm:inline">|</span>
+            <span>{syncLabel}</span>
+            <span className="hidden sm:inline">|</span>
+            <span>{usageLabel}</span>
+          </div>
         </motion.div>
 
         {/* Features list */}

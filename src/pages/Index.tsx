@@ -51,7 +51,7 @@ const Index = () => {
                 <span className="inline-block px-4 py-1.5 rounded-full text-xs font-body font-semibold bg-secondary/15 text-secondary mb-6">
                   One Workspace For Notes + AI
                 </span>
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold text-foreground leading-tight mb-6">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold text-foreground leading-tight mb-6">
                   The Premium{" "}
                   <span className="liquid-text-gradient">Study OS</span>{" "}
                   For Modern Classrooms
