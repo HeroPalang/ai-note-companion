@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { BookOpen, LogIn, UserPlus, LayoutDashboard, Info, Menu, X, User, Shield } from "lucide-react";
+import { BookOpen, Info, LayoutDashboard, LogIn, Menu, Shield, User, UserPlus, X } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
@@ -36,7 +36,7 @@ const Navbar = () => {
       </Link>
 
       {/* Desktop */}
-      <div className="hidden md:flex items-center gap-1">
+      <div className="hidden lg:flex items-center gap-1">
         {links.map((link) => (
           <Link
             key={link.to}
@@ -53,7 +53,7 @@ const Navbar = () => {
       </div>
 
       {/* Mobile toggle */}
-      <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden text-foreground p-1" type="button">
+      <button onClick={() => setMobileOpen(!mobileOpen)} className="lg:hidden text-foreground p-1" type="button">
         {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
       </button>
 
@@ -64,7 +64,7 @@ const Navbar = () => {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="absolute top-full left-0 right-0 mt-2 liquid-card bg-card/95 backdrop-blur-2xl border-border/70 shadow-2xl p-4 flex flex-col gap-1 md:hidden"
+            className="absolute top-full left-0 right-0 mt-2 liquid-card bg-card/95 backdrop-blur-2xl border-border/70 shadow-2xl p-4 flex flex-col gap-1 lg:hidden"
           >
             {links.map((link) => (
               <Link

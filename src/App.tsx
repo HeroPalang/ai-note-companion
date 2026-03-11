@@ -18,6 +18,7 @@ import AddNote from "./pages/AddNote";
 import AIHelper from "./pages/AIHelper";
 import About from "./pages/About";
 import Profile from "./pages/Profile";
+import Referrals from "./pages/Referrals";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
@@ -87,6 +88,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/referrals"
+              element={
+                <ProtectedRoute>
+                  <Referrals />
                 </ProtectedRoute>
               }
             />
