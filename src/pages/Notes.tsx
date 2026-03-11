@@ -104,7 +104,7 @@ const Notes = () => {
       <LiquidBackground />
       <div className="relative z-10 max-w-4xl mx-auto">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="text-4xl font-display font-bold text-foreground mb-2">Saved Notes</h1>
+          <h1 className="text-2xl sm:text-4xl font-display font-bold text-foreground mb-2">Saved Notes</h1>
           <p className="text-muted-foreground font-body mb-8">View and manage all your study notes</p>
         </motion.div>
 
