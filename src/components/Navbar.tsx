@@ -32,8 +32,7 @@ const Navbar = () => {
     <nav className="fixed top-4 left-1/2 -translate-x-1/2 z-50 px-6 py-3 flex items-center justify-between gap-6 max-w-4xl w-[calc(100%-2rem)] bg-card/80 backdrop-blur-xl border border-border rounded-2xl shadow-lg" style={{ position: 'fixed' }}>
       <Link to="/" className="flex items-center gap-2 font-body font-bold text-primary text-base sm:text-lg shrink-0">
         <img src="/logo.png" alt="Note Explainer logo" className="w-5 h-5 sm:w-6 sm:h-6 rounded-sm" />
-        <span className="hidden xs:inline sm:inline">Note Explainer</span>
-        <span className="xs:hidden sm:hidden">NE</span>
+        <span className="hidden sm:inline">Note Explainer</span>
       </Link>
 
       {/* Desktop */}
