@@ -154,7 +154,7 @@ const AdminDashboard = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 }}
-              className="grid grid-cols-2 md:grid-cols-5 gap-4"
+              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4"
             >
               {statCards(data.metrics).map((s) => (
                 <Card key={s.label} className="bg-card/80 backdrop-blur-sm border-border">
